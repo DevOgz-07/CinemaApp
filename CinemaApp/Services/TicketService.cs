@@ -23,30 +23,71 @@ namespace CinemaApp.Services
 
         private void CreatePdf(Ticket t, string filmAd)
         {
-            // Tickets klasörünü oluştur
             string folder = Path.Combine(Environment.CurrentDirectory, "Tickets");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
             string path = Path.Combine(folder, $"Bilet_{t.TicketNo}.pdf");
 
-            using (var writer = new PdfWriter(path))
-            using (var pdf = new PdfDocument(writer))
-            using (var doc = new Document(pdf))
+            try
             {
-                // Türkçe karakter ve emoji destekli font (Windows için)
-                string fontPath = @"C:\Windows\Fonts\ARIALUNI.TTF"; // Arial Unicode MS
-                PdfFont font = PdfFontFactory.CreateFont(fontPath, PdfEncodings.IDENTITY_H);
+                using (var writer = new PdfWriter(path))
+                using (var pdf = new PdfDocument(writer))
+                using (var doc = new Document(pdf))
+                {
+                    // Normal ve Bold fontlar
+                    string fontPathRegular = @"C:\Windows\Fonts\segoeui.ttf";   // Segoe UI Regular
+                    string fontPathBold = @"C:\Windows\Fonts\segoeuib.ttf";      // Segoe UI Bold
 
-                doc.Add(new Paragraph("SİNEMA BİLETİ").SetFont(font).SetFontSize(20));
-                doc.Add(new Paragraph($"Film: {filmAd}").SetFont(font));
-                doc.Add(new Paragraph($"Salon: {t.SalonId}").SetFont(font));
-                doc.Add(new Paragraph($"Koltuk: {t.KoltukNo}").SetFont(font));
-                doc.Add(new Paragraph($"Seans: {t.Saat}").SetFont(font));
-                doc.Add(new Paragraph($"Bilet Tipi: {t.BiletTipi}").SetFont(font));
-                doc.Add(new Paragraph($"Tarih: {t.Tarih:dd.MM.yyyy HH:mm}").SetFont(font));
+                    var fontProgramRegular = FontProgramFactory.CreateFont(fontPathRegular); // Framework 7.3 uyumluluğu için kullanılabilir.
+                    var fontProgramBold = FontProgramFactory.CreateFont(fontPathBold);
+
+                    PdfFont font = PdfFontFactory.CreateFont(fontProgramRegular, PdfEncodings.IDENTITY_H);
+                    PdfFont fontBold = PdfFontFactory.CreateFont(fontProgramBold, PdfEncodings.IDENTITY_H);
+
+                    // Başlık
+                    doc.Add(new Paragraph("SİNEMA BİLETİ")
+                        .SetFont(fontBold)
+                        .SetFontSize(24)
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    );
+
+                    doc.Add(new Paragraph("\n"));
+
+                    // Bilgiler tabloyla
+                    var table = new Table(2).UseAllAvailableWidth();
+                    table.AddCell(new Cell().Add(new Paragraph("Film:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(filmAd).SetFont(font)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Salon:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(t.SalonId.ToString()).SetFont(font)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Koltuk:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(t.KoltukNo.ToString()).SetFont(font)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Seans:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(t.Saat).SetFont(font)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Bilet Tipi:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(t.BiletTipi).SetFont(font)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Tarih:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph(t.Tarih.ToString("dd.MM.yyyy HH:mm")).SetFont(font)));
+
+                    doc.Add(table);
+
+                    // Alt not
+                    doc.Add(new Paragraph("\nİyi Seyirler!")
+                        .SetFont(font)
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
+                    );
+                }
 
                 Console.WriteLine($"PDF oluşturuldu: {path}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PDF oluşturulurken hata: " + ex.Message);
             }
         }
 
