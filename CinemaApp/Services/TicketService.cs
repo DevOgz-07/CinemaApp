@@ -9,6 +9,7 @@ using iText.Layout;
 using iText.Layout.Element;
 using iText.Kernel.Font;
 using iText.IO.Font;
+using iText.Barcodes;
 
 namespace CinemaApp.Services
 {
@@ -35,52 +36,84 @@ namespace CinemaApp.Services
                 using (var pdf = new PdfDocument(writer))
                 using (var doc = new Document(pdf))
                 {
-                    // Normal ve Bold fontlar
-                    string fontPathRegular = @"C:\Windows\Fonts\segoeui.ttf";   // Segoe UI Regular
-                    string fontPathBold = @"C:\Windows\Fonts\segoeuib.ttf";      // Segoe UI Bold
+                    string fontPathRegular = @"C:\Windows\Fonts\segoeui.ttf";
+                    string fontPathBold = @"C:\Windows\Fonts\segoeuib.ttf";
 
-                    var fontProgramRegular = FontProgramFactory.CreateFont(fontPathRegular); // Framework 7.3 uyumluluğu için kullanılabilir.
+                    var fontProgramRegular = FontProgramFactory.CreateFont(fontPathRegular);
                     var fontProgramBold = FontProgramFactory.CreateFont(fontPathBold);
 
                     PdfFont font = PdfFontFactory.CreateFont(fontProgramRegular, PdfEncodings.IDENTITY_H);
                     PdfFont fontBold = PdfFontFactory.CreateFont(fontProgramBold, PdfEncodings.IDENTITY_H);
 
-                    // Başlık
+                    // ÜST BAŞLIK
                     doc.Add(new Paragraph("SİNEMA BİLETİ")
                         .SetFont(fontBold)
-                        .SetFontSize(24)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                    );
+                        .SetFontSize(28)
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
+
+                    doc.Add(new Paragraph("──────────────").SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
 
                     doc.Add(new Paragraph("\n"));
 
-                    // Bilgiler tabloyla
+                    // QR CODE
+                    var qr = new BarcodeQRCode(t.TicketNo);
+                    var qrObject = qr.CreateFormXObject(pdf);
+                    var qrImage = new Image(qrObject)
+                        .SetWidth(120)
+                        .SetHeight(120)
+                        .SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
+
+                    doc.Add(qrImage);
+
+                    doc.Add(new Paragraph("\n"));
+
+                    // BARKOD - CODE128
+                    var barcode128 = new Barcode128(pdf);
+                    barcode128.SetCode(t.TicketNo);
+                    barcode128.SetCodeType(Barcode128.CODE128);
+
+                    var bcImg = new Image(barcode128.CreateFormXObject(pdf))
+                        .SetWidth(250)
+                        .SetHorizontalAlignment(iText.Layout.Properties.HorizontalAlignment.CENTER);
+
+                    doc.Add(bcImg);
+                    doc.Add(new Paragraph(t.TicketNo)
+                        .SetFont(font)
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
+
+                    doc.Add(new Paragraph("\n──────────────\n")
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
+
+                    // BİLET BİLGİLERİ TABLOSU
                     var table = new Table(2).UseAllAvailableWidth();
-                    table.AddCell(new Cell().Add(new Paragraph("Film:").SetFont(fontBold)));
+
+                    table.AddCell(new Cell().Add(new Paragraph("Film").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(filmAd).SetFont(font)));
 
-                    table.AddCell(new Cell().Add(new Paragraph("Salon:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph("Salon").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(t.SalonId.ToString()).SetFont(font)));
 
-                    table.AddCell(new Cell().Add(new Paragraph("Koltuk:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph("Koltuk").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(t.KoltukNo.ToString()).SetFont(font)));
 
-                    table.AddCell(new Cell().Add(new Paragraph("Seans:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph("Seans").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(t.Saat).SetFont(font)));
 
-                    table.AddCell(new Cell().Add(new Paragraph("Bilet Tipi:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph("Bilet Tipi").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(t.BiletTipi).SetFont(font)));
 
-                    table.AddCell(new Cell().Add(new Paragraph("Tarih:").SetFont(fontBold)));
+                    table.AddCell(new Cell().Add(new Paragraph("Satış Tarihi").SetFont(fontBold)));
                     table.AddCell(new Cell().Add(new Paragraph(t.Tarih.ToString("dd.MM.yyyy HH:mm")).SetFont(font)));
 
                     doc.Add(table);
 
-                    // Alt not
-                    doc.Add(new Paragraph("\nİyi Seyirler!")
+                    doc.Add(new Paragraph("\n──────────────\n")
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
+
+                    doc.Add(new Paragraph("İyi Seyirler Dileriz")
                         .SetFont(font)
-                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER)
-                    );
+                        .SetFontSize(12)
+                        .SetTextAlignment(iText.Layout.Properties.TextAlignment.CENTER));
                 }
 
                 Console.WriteLine($"PDF oluşturuldu: {path}");
@@ -95,27 +128,68 @@ namespace CinemaApp.Services
         {
             Console.WriteLine("--- Film Atanmış Salonlar ---");
 
-            foreach (var s in _db.Salonlar.Where(x => x.FilmId != null))
+            var atanmisSalonlar = _db.Salonlar.Where(x => x.FilmId != null).ToList();
+            if (!atanmisSalonlar.Any())
             {
-                var film = _db.Filmler.First(f => f.Id == s.FilmId);
+                Console.WriteLine("Henüz film atanmış salon yok!");
+                return;
+            }
+
+            foreach (var s in atanmisSalonlar)
+            {
+                var film = _db.Filmler.FirstOrDefault(f => f.Id == s.FilmId);
+                if (film == null) continue; // Film bulunamazsa atla
                 Console.WriteLine($"{s.Id}. Salon → {film.Ad}");
             }
 
             Console.Write("Salon ID: ");
-            int salonId = int.Parse(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int salonId))
+            {
+                Console.WriteLine("Geçersiz Salon ID!");
+                return;
+            }
 
-            var salon = _db.Salonlar.First(s => s.Id == salonId);
-            var filmData = _db.Filmler.First(f => f.Id == salon.FilmId);
+            var salon = _db.Salonlar.FirstOrDefault(s => s.Id == salonId);
+            if (salon == null)
+            {
+                Console.WriteLine("Salon bulunamadı!");
+                return;
+            }
+
+            var filmData = _db.Filmler.FirstOrDefault(f => f.Id == salon.FilmId);
+            if (filmData == null)
+            {
+                Console.WriteLine("Film bilgisi bulunamadı!");
+                return;
+            }
+
+            if (salon.Seanslar == null || !salon.Seanslar.Any())
+            {
+                Console.WriteLine("Bu salonda seans bulunmamaktadır!");
+                return;
+            }
 
             Console.Write("Seans (14:00 / 18:00): ");
             string seans = Console.ReadLine();
 
-            var sSeans = salon.Seanslar.First(s => s.Saat == seans);
+            var sSeans = salon.Seanslar.FirstOrDefault(s => s.Saat == seans);
+            if (sSeans == null)
+            {
+                Console.WriteLine("Seans bulunamadı!");
+                return;
+            }
 
-            Console.WriteLine($"Dolu koltuklar: {string.Join(",", sSeans.DoluKoltuklar)}");
+            if (sSeans.DoluKoltuklar == null)
+                sSeans.DoluKoltuklar = new List<int>();
+
+            Console.WriteLine($"Dolu koltuklar: {(sSeans.DoluKoltuklar.Any() ? string.Join(",", sSeans.DoluKoltuklar) : "Hiç koltuk dolu değil")}");
 
             Console.Write("Koltuk Seç: ");
-            int koltuk = int.Parse(Console.ReadLine());
+            if (!int.TryParse(Console.ReadLine(), out int koltuk))
+            {
+                Console.WriteLine("Geçersiz koltuk numarası!");
+                return;
+            }
 
             if (sSeans.DoluKoltuklar.Contains(koltuk))
             {
@@ -124,12 +198,22 @@ namespace CinemaApp.Services
             }
 
             Console.Write("Bilet Tipi (Tam / Ogrenci): ");
-            string tip = Console.ReadLine();
+            string tip = Console.ReadLine()?.Trim().ToLower();
 
-            if (tip.ToLower() == "tam")
-                sSeans.SatilanTam++;
-            else
-                sSeans.SatilanOgrenci++;
+            switch (tip)
+            {
+                case "tam":
+                    sSeans.SatilanTam++;
+                    tip = "Tam";
+                    break;
+                case "ogrenci":
+                    sSeans.SatilanOgrenci++;
+                    tip = "Ogrenci";
+                    break;
+                default:
+                    Console.WriteLine("Geçersiz bilet tipi!");
+                    return;
+            }
 
             sSeans.DoluKoltuklar.Add(koltuk);
 
