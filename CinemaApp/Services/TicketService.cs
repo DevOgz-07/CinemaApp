@@ -1,15 +1,16 @@
 ﻿using CinemaApp.Data;
 using CinemaApp.Models;
+using iText.Barcodes;
+using iText.IO.Font;
+using iText.IO.Font.Constants;
+using iText.Kernel.Font;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using iText.Kernel.Pdf;
-using iText.Layout;
-using iText.Layout.Element;
-using iText.Kernel.Font;
-using iText.IO.Font;
-using iText.Barcodes;
 
 namespace CinemaApp.Services
 {
@@ -36,14 +37,26 @@ namespace CinemaApp.Services
                 using (var pdf = new PdfDocument(writer))
                 using (var doc = new Document(pdf))
                 {
+                    // Font tanımlamaları...
                     string fontPathRegular = @"C:\Windows\Fonts\segoeui.ttf";
                     string fontPathBold = @"C:\Windows\Fonts\segoeuib.ttf";
 
-                    var fontProgramRegular = FontProgramFactory.CreateFont(fontPathRegular);
-                    var fontProgramBold = FontProgramFactory.CreateFont(fontPathBold);
+                    PdfFont font;
+                    PdfFont fontBold;
 
-                    PdfFont font = PdfFontFactory.CreateFont(fontProgramRegular, PdfEncodings.IDENTITY_H);
-                    PdfFont fontBold = PdfFontFactory.CreateFont(fontProgramBold, PdfEncodings.IDENTITY_H);
+                    try
+                    {
+                        var fontProgramRegular = FontProgramFactory.CreateFont(fontPathRegular);
+                        var fontProgramBold = FontProgramFactory.CreateFont(fontPathBold);
+                        font = PdfFontFactory.CreateFont(fontProgramRegular, PdfEncodings.IDENTITY_H);
+                        fontBold = PdfFontFactory.CreateFont(fontProgramBold, PdfEncodings.IDENTITY_H);
+                    }
+                    catch (Exception)
+                    {
+                        font = PdfFontFactory.CreateFont(StandardFontFamilies.HELVETICA, PdfEncodings.IDENTITY_H);
+                        fontBold = PdfFontFactory.CreateFont(StandardFontFamilies.HELVETICA, PdfEncodings.IDENTITY_H);
+                    }
+
 
                     // ÜST BAŞLIK
                     doc.Add(new Paragraph("SİNEMA BİLETİ")
@@ -55,8 +68,17 @@ namespace CinemaApp.Services
 
                     doc.Add(new Paragraph("\n"));
 
+                    // ⭐️ YENİ DEĞİŞİKLİK: Bilet bilgilerini metin olarak QR koda gömme
+                    string qrDataText =
+                        $"Bilet No: {t.TicketNo}\n" +
+                        $"Film: {filmAd}\n" +
+                        $"Salon: {t.SalonId}\n" +
+                        $"Koltuk: {t.KoltukNo}\n" +
+                        $"Seans: {t.Saat}\n" +
+                        $"Tarih: {t.Tarih.ToString("dd.MM.yyyy HH:mm")}";
+
                     // QR CODE
-                    var qr = new BarcodeQRCode(t.TicketNo);
+                    var qr = new BarcodeQRCode(qrDataText); // Metin formatı kullanılıyor
                     var qrObject = qr.CreateFormXObject(pdf);
                     var qrImage = new Image(qrObject)
                         .SetWidth(120)
@@ -234,5 +256,6 @@ namespace CinemaApp.Services
             Console.WriteLine("Bilet Satıldı!");
             CreatePdf(ticket, filmData.Ad);
         }
+
     }
 }

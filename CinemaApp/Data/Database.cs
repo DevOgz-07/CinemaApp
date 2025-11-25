@@ -27,6 +27,10 @@ namespace CinemaApp.Data
             var json = JsonConvert.SerializeObject(this, Formatting.Indented);
             File.WriteAllText(FilePath, json);
         }
+        public void Remove()
+        {
+                 //Eklenecek
+        }
     }
 }
 

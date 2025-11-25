@@ -1,0 +1,48 @@
+﻿using CinemaApp.Data;
+using System;
+using System.Linq;
+
+namespace CinemaApp.Services
+{
+    public class TicketListService
+    {
+        private readonly Database _db;
+
+        public TicketListService(Database db)
+        {
+            _db = db;
+        }
+
+        public void BiletleriListele()
+        {
+            Console.WriteLine("\n--- AKTİF BİLETLER ---\n");
+
+            if (!_db.Biletler.Any())
+            {
+                Console.WriteLine("Aktif bilet bulunmuyor.");
+                return;
+            }
+
+            // Kolon başlıkları
+            Console.WriteLine(
+                $"{"BiletNo",-12} | {"Film",-20} | {"Salon",-6} | {"Seans",-6} | {"Koltuk",-6} | {"Tip",-8} | {"Tarih",-16}"
+            );
+            Console.WriteLine(new string('-', 90));
+
+            foreach (var t in _db.Biletler)
+            {
+                var film = _db.Filmler.First(f => f.Id == t.FilmId);
+                var salon = _db.Salonlar.First(s => s.Id == t.SalonId);
+
+                Console.WriteLine(
+                    $"{t.TicketNo,-12} | " +
+                    $"{film.Ad,-20} | " + salon.Id.ToString().PadLeft(6) + " | " +
+                    $"{t.Saat,-6} | " +
+                    $"{t.KoltukNo,-6} | " +
+                    $"{t.BiletTipi,-8} | " +
+                    $"{t.Tarih:dd.MM.yyyy HH:mm}"
+                );
+            }
+        }
+    }
+}

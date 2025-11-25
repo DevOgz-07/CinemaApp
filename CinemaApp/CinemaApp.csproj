@@ -152,6 +152,7 @@
     <Compile Include="Services\FilmService.cs" />
     <Compile Include="Services\ReportService.cs" />
     <Compile Include="Services\SalonService.cs" />
+    <Compile Include="Services\TicketListService.cs" />
     <Compile Include="Services\TicketService.cs" />
   </ItemGroup>
   <ItemGroup>
