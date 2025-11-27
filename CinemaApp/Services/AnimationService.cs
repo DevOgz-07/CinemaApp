@@ -37,7 +37,7 @@ namespace CinemaApp.Services
             }
 
             Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("\n          🎬 CINEMA APP SISTEMI 🎟️");
+            Console.WriteLine("\n          🎬 CİNEMA 🎟️");
             Console.WriteLine("          Hoş Geldiniz...\n");
             Console.ResetColor();
 
