@@ -40,7 +40,11 @@ namespace CinemaApp.Services
         {
             foreach (var f in _db.Filmler)
                 Console.WriteLine($"{f.Id} - {f.Ad}");
+
+            Console.WriteLine("\nDevam etmek için bir tuşa basın...");
+            Console.ReadKey();
         }
+
 
         public void FilmSil()
         {

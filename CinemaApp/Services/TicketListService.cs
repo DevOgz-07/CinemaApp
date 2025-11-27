@@ -43,6 +43,8 @@ namespace CinemaApp.Services
                     $"{t.Tarih:dd.MM.yyyy HH:mm}"
                 );
             }
+            Console.WriteLine("\nDevam etmek için bir tuşa basın...");
+            Console.ReadKey();
         }
     }
 }
