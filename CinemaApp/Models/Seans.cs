@@ -8,6 +8,7 @@ namespace CinemaApp.Models
 {
     public class Seans
     {
+        public int Id { get; set; }
         public string Saat { get; set; }
         public int SatilanTam { get; set; }
         public int SatilanOgrenci { get; set; }

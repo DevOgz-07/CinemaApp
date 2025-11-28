@@ -8,12 +8,14 @@ namespace CinemaApp.Models
 {
     public class Ticket
     {
-        public string TicketNo { get; set; }
-        public int FilmId { get; set; }
-        public int SalonId { get; set; }
-        public int KoltukNo { get; set; }
-        public string Saat { get; set; }
-        public string BiletTipi { get; set; }
-        public DateTime Tarih { get; set; }
+        public string TicketNo { get; set; }   // Bilet numarası
+        public int FilmId { get; set; }        // Film referansı
+        public int SalonId { get; set; }       // Salon referansı
+        public string Seans { get; set; }      // Örn: "14:00"
+        public int KoltukNo { get; set; }      // Koltuk numarası
+        public string BiletTipi { get; set; }  // Tam / Öğrenci
+        public DateTime Tarih { get; set; }    // Satış tarihi
+        public string Saat { get; set; }      // Örn: "14:00"
+        public int seansId { get; set; }
     }
 }

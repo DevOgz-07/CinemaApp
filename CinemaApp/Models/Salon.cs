@@ -12,6 +12,6 @@ namespace CinemaApp.Models
         public int Kapasite { get; set; }
         public int? FilmId { get; set; }
 
-        public List<Seans> Seanslar { get; set; }
+        public List<Seans> Seanslar { get; set; } 
     }
 }

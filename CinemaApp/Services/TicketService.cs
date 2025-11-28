@@ -245,7 +245,9 @@ namespace CinemaApp.Services
                 FilmId = filmData.Id,
                 SalonId = salon.Id,
                 KoltukNo = koltuk,
-                Saat = seans,
+                Saat = sSeans.Saat,         // Seans saatini Ticket'a yaz
+                Seans = sSeans.Saat,        // Seans alanını da doldur
+                seansId = sSeans.Id,        // Seans ID'sini yaz
                 BiletTipi = tip,
                 Tarih = DateTime.Now
             };

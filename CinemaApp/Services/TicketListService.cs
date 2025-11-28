@@ -31,12 +31,16 @@ namespace CinemaApp.Services
 
             foreach (var t in _db.Biletler)
             {
-                var film = _db.Filmler.First(f => f.Id == t.FilmId);
-                var salon = _db.Salonlar.First(s => s.Id == t.SalonId);
+                var film = _db.Filmler.FirstOrDefault(f => f.Id == t.FilmId);
+                var salon = _db.Salonlar.FirstOrDefault(s => s.Id == t.SalonId);
+
+                string filmAd = film != null ? film.Ad : "SİLİNMİŞ";
+                string salonAd = salon != null ? salon.Id.ToString() : "SİLİNMİŞ";
 
                 Console.WriteLine(
                     $"{t.TicketNo,-12} | " +
-                    $"{film.Ad,-20} | " + salon.Id.ToString().PadLeft(6) + " | " +
+                    $"{filmAd,-20} | " +
+                    $"{salonAd,-6} | " +
                     $"{t.Saat,-6} | " +
                     $"{t.KoltukNo,-6} | " +
                     $"{t.BiletTipi,-8} | " +
